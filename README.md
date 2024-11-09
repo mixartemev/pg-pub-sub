@@ -9,6 +9,8 @@ splitting handlers through different bounded contexts and prevent "spaghetti" co
 
 ## Usage example
 
+Define your domain events and handlers:
+
 ```python
 # your domain event that occurs in its own bounded context
 class UserCreated(Model):
@@ -40,6 +42,12 @@ async def main() -> None:
     finally:
         logger.info('stopping the app')
 
+```
+
+Produce events via PG from your business code or directly via SQL:
+
+```sql
+SELECT pg_notify('users', '{"email":"test@mail.com","first_name":"Foma","last_name":"Kinaev"}');
 ```
 
 ## Installation
