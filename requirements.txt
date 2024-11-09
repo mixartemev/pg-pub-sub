@@ -1,0 +1,9 @@
+asyncpg==0.30.0
+psycopg-binary==3.2.3
+structlog==24.4.0
+pydantic==2.9.2
+python-dotenv==1.0.1
+
+# dev shit, split via poetry or something like this
+ipython==8.29.0
+pgcli==4.1.0
