@@ -1,9 +1,9 @@
 import asyncio
 import enum
 import structlog
-from base_model import Model
+from src.base_model import Model
 
-from listener import listener
+from src.listener import listener
 
 logger = structlog.get_logger(__name__)
 

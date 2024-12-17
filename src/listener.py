@@ -5,10 +5,10 @@ from typing import Any
 from collections.abc import Coroutine
 import functools
 from pydantic import ValidationError
-from base_model import Model
-
 import asyncpg
 import structlog
+
+from src.base_model import Model
 
 
 logger = structlog.get_logger(__name__)

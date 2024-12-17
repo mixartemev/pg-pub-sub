@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
 import asyncio
 import asyncpg
@@ -5,10 +7,15 @@ import structlog
 
 import dataclasses
 import os
+from typing import AsyncGenerator
 
-from listener import listener
+from fastapi import FastAPI
+from tortoise.contrib.fastapi import RegisterTortoise
+
+from src import models
 # discovering is broken for now, will fix it later
-from event_handlers import handle_user_created
+from src.event_handlers import handle_user_created
+from src.listener import listener
 
 load_dotenv()
 logger = structlog.get_logger(__name__)
@@ -23,26 +30,25 @@ class DatabaseCredentials:
     database: str = os.environ.get('DATABASE_NAME')
 
     def get_dsn(self) -> str:
-        return f'postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
+        return f'postgres://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
 
 
-async def main() -> None:
-    creds = DatabaseCredentials()
-    logger.info('openning a database connection')
-
-    # TODO use a connection pool here
-    connection = await asyncpg.connect(dsn=creds.get_dsn())
-    listener.set_connection(connection)
-
-    try:
-        await listener.start()
-    except (KeyboardInterrupt, asyncio.exceptions.CancelledError):
-        logger.info('closing the database connection')
-        await connection.close()
-    finally:
-        logger.info('stopping the app')
+creds = DatabaseCredentials()
 
 
-if __name__ == '__main__':
-    # TODO try uvloop
-    asyncio.run(main())
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
+    async with RegisterTortoise(_app, db_url=creds.get_dsn(), modules={"models": [models]}):
+        connection = await asyncpg.connect(creds.get_dsn())
+        listener.set_connection(connection)
+
+        try:
+            await listener.start()
+        except (KeyboardInterrupt, asyncio.exceptions.CancelledError):
+            logger.info('closing the database connection')
+            await connection.close()
+        finally:
+            logger.info('stopping the app')
+        yield
+
+app = FastAPI(debug=True, lifespan=lifespan)

@@ -2,3 +2,6 @@ asyncpg
 structlog
 pydantic
 python-dotenv
+fastapi
+tortoise-orm
+uvicorn
