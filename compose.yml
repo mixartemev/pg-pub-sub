@@ -1,23 +1,29 @@
-version: '3.8'
-
 services:
+  api:
+    build: .
+    volumes:
+      - ./src:/src
+    env_file:
+      - .env.local
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+      - redis
+
   db:
     tty: true
-    image: postgres:16-alpine
+    image: postgres:alpine
     volumes:
       - ./docker/postgres/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
       - pg-queue-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: test_pg_user
-      POSTGRES_PASSWORD: 123456
-      DATABASE_USER: test_user
-      DATABASE_PASSWORD: 123456
-      DATABASE_NAME: test_database
+    env_file:
+      - .env.local
     ports:
-      - 5432:5432
+      - 5433:5432
 
   redis:
-    image: redis:6-alpine
+    image: redis:alpine
     networks:
       - default
     ports:
@@ -25,4 +31,3 @@ services:
 
 volumes:
   pg-queue-data: {}
-

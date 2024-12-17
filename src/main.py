@@ -18,7 +18,7 @@ logger = structlog.get_logger(__name__)
 class DatabaseCredentials:
     host: str = os.environ.get('DATABASE_HOST')
     port: int = os.environ.get('DATABASE_PORT', 5432)
-    username: str = os.environ.get('DATABASE_USERNAME')
+    username: str = os.environ.get('DATABASE_USER')
     password: str = os.environ.get('DATABASE_PASSWORD')
     database: str = os.environ.get('DATABASE_NAME')
 
