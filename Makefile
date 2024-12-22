@@ -1,4 +1,4 @@
 compose:
 	docker compose up -d
 db-shell:
-	psql -U test_user -h localhost -p 5433 -d test_database
+	docker compose exec db psql -U test_user -d test_database

@@ -54,9 +54,13 @@ SELECT pg_notify('users', '{"email":"test@mail.com","first_name":"Foma","last_na
 
 Tested locally on bare metal Python3.12, no tests provided yet
 
-```
+```sh
 python3 -m venv venv
 pip install -r requirements.txt
 make compose
-make run
+```
+
+Open db shell for event triggering
+```sh
+make db-shell
 ```
