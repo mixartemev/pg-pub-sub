@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import Queue
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -9,8 +10,9 @@ import dataclasses
 import os
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from sse_starlette import EventSourceResponse
+from sse_starlette.event import ServerSentEvent
 from tortoise.contrib.fastapi import RegisterTortoise
 
 from src import models
@@ -55,7 +57,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(debug=True, lifespan=lifespan)
 
 
-@app.get("/sse")
+@app.get("/sse")  # simplest stream generator
 async def sse():
     async def gen():
         for i in range(99):
@@ -63,3 +65,33 @@ async def sse():
             await asyncio.sleep(1)
 
     return EventSourceResponse(gen())
+
+
+class Stream:
+    def __init__(self) -> None:
+        self._queue = Queue[ServerSentEvent]()
+
+    def __aiter__(self) -> "Stream":
+        return self
+
+    async def __anext__(self) -> ServerSentEvent:
+        return await self._queue.get()
+
+    async def asend(self, value: ServerSentEvent) -> None:
+        await self._queue.put(value)
+
+
+_stream = Stream()
+app.dependency_overrides[Stream] = lambda: _stream
+
+
+@app.get("/listen")
+async def sse_listener(stream: Stream = Depends()) -> EventSourceResponse:
+    return EventSourceResponse(stream)
+
+
+@app.post("/message", status_code=201)
+async def send_message(message: str, stream: Stream = Depends()) -> None:
+    await stream.asend(
+        ServerSentEvent(data=message)
+    )
