@@ -3,5 +3,6 @@ structlog
 pydantic
 python-dotenv
 fastapi
+sse-starlette
 tortoise-orm
 uvicorn

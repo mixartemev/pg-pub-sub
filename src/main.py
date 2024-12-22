@@ -1,7 +1,7 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-import asyncio
 import asyncpg
 import structlog
 
@@ -10,6 +10,7 @@ import os
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
+from sse_starlette import EventSourceResponse
 from tortoise.contrib.fastapi import RegisterTortoise
 
 from src import models
@@ -43,7 +44,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         listener.set_connection(connection)
 
         try:
-            await listener.start()
+            asyncio.create_task(listener.start())
         except (KeyboardInterrupt, asyncio.exceptions.CancelledError):
             logger.info('closing the database connection')
             await connection.close()
@@ -52,3 +53,13 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         yield
 
 app = FastAPI(debug=True, lifespan=lifespan)
+
+
+@app.get("/sse")
+async def sse():
+    async def gen():
+        for i in range(99):
+            yield i
+            await asyncio.sleep(1)
+
+    return EventSourceResponse(gen())
