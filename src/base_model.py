@@ -17,5 +17,5 @@ class Model(BaseModel):
 
 
 class UserCreated(Model):
-    id: str
+    id: int
     name: str
