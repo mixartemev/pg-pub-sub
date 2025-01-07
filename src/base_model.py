@@ -14,3 +14,9 @@ class Model(BaseModel):
         }
         allow_mutation = True
         keep_untouched = (cached_property,)
+
+
+class UserCreated(Model):
+    email: str
+    first_name: str
+    last_name: str

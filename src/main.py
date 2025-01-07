@@ -1,5 +1,4 @@
 import asyncio
-from asyncio import Queue
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -12,8 +11,10 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI, Depends
 from sse_starlette import EventSourceResponse
-from sse_starlette.event import ServerSentEvent
 from tortoise.contrib.fastapi import RegisterTortoise
+
+from src.base_model import UserCreated
+from src.stream import stream, Stream
 
 from src import models
 # discovering is broken for now, will fix it later
@@ -47,51 +48,18 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
         try:
             asyncio.create_task(listener.start())
+            yield
         except (KeyboardInterrupt, asyncio.exceptions.CancelledError):
             logger.info('closing the database connection')
             await connection.close()
         finally:
             logger.info('stopping the app')
-        yield
 
 app = FastAPI(debug=True, lifespan=lifespan)
 
-
-@app.get("/sse")  # simplest stream generator
-async def sse():
-    async def gen():
-        for i in range(99):
-            yield i
-            await asyncio.sleep(1)
-
-    return EventSourceResponse(gen())
+app.dependency_overrides[Stream] = lambda: stream
 
 
-class Stream:
-    def __init__(self) -> None:
-        self._queue = Queue[ServerSentEvent]()
-
-    def __aiter__(self) -> "Stream":
-        return self
-
-    async def __anext__(self) -> ServerSentEvent:
-        return await self._queue.get()
-
-    async def asend(self, value: ServerSentEvent) -> None:
-        await self._queue.put(value)
-
-
-_stream = Stream()
-app.dependency_overrides[Stream] = lambda: _stream
-
-
-@app.get("/listen")
+@app.get("/listen", response_model=UserCreated)
 async def sse_listener(stream: Stream = Depends()) -> EventSourceResponse:
     return EventSourceResponse(stream)
-
-
-@app.post("/message", status_code=201)
-async def send_message(message: str, stream: Stream = Depends()) -> None:
-    await stream.asend(
-        ServerSentEvent(data=message)
-    )
