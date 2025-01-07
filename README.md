@@ -47,7 +47,7 @@ async def main() -> None:
 Produce events via PG from your business code or directly via SQL:
 
 ```sql
-SELECT pg_notify('users', '{"email":"test@mail.com","first_name":"Foma","last_name":"Kinaev"}');
+SELECT pg_notify('users', '{"id": 321, "name": "Foma"}');
 ```
 
 ## Installation

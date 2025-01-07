@@ -17,6 +17,5 @@ class Model(BaseModel):
 
 
 class UserCreated(Model):
-    email: str
-    first_name: str
-    last_name: str
+    id: str
+    name: str

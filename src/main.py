@@ -60,6 +60,7 @@ app = FastAPI(debug=True, lifespan=lifespan)
 app.dependency_overrides[Stream] = lambda: stream
 
 
-@app.get("/listen", response_model=UserCreated)
-async def sse_listener(stream: Stream = Depends()) -> EventSourceResponse:
+@app.get("/listen/{uid}", response_model=UserCreated)
+async def sse_listener(uid: int, stream: Stream = Depends()) -> EventSourceResponse:
+    # if uid == user.id from event:
     return EventSourceResponse(stream)
