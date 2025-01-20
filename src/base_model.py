@@ -16,6 +16,6 @@ class Model(BaseModel):
         keep_untouched = (cached_property,)
 
 
-class UserCreated(Model):
+class UserPyd(Model):
     id: int
     name: str

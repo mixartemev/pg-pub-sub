@@ -1,6 +1,6 @@
 # PG pub-sub
 
-A toy PoC of the [pub-sub pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/publisher-subscriber) 
+A toy PoC of the [pub-sub pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/publisher-subscriber)
 built with the PostgreSQL [NOTIFY/LISTEN](https://www.postgresql.org/docs/current/sql-notify.html) feature
 for education and fun -> shit code quality and no tests
 
@@ -47,7 +47,11 @@ async def main() -> None:
 Produce events via PG from your business code or directly via SQL:
 
 ```sql
-SELECT pg_notify('users', '{"id": 321, "name": "Foma"}');
+SELECT pg_notify('user_new', '{"id": 1, "name": "Foma"}');
+```
+
+```sql
+SELECT pg_notify('user_upd', '{"id": 1, "name": "Vasya"}');
 ```
 
 ## Installation

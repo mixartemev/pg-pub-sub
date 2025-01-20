@@ -1,3 +1,4 @@
+from typing import Callable
 import asyncio
 import inspect
 from collections import defaultdict
@@ -29,7 +30,7 @@ class Listener:
     def set_connection(self, connection: asyncpg.Connection) -> None:
         self._connection = connection
 
-    def subscribe(self, channel: str) -> None:
+    def subscribe(self, channel: str) -> Callable:
         if not channel:
             raise NotImplementedError('Please provide a proper channel to subscribe')
 

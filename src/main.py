@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
+from typing_extensions import AsyncIterable
 
 from dotenv import load_dotenv
 import asyncpg
@@ -13,8 +14,8 @@ from fastapi import FastAPI, Depends
 from sse_starlette import EventSourceResponse
 from tortoise.contrib.fastapi import RegisterTortoise
 
-from src.base_model import UserCreated
-from src.stream import stream, Stream
+from src.base_model import UserPyd
+from src.stream import Stream, app_stream
 
 from src import models
 # discovering is broken for now, will fix it later
@@ -57,10 +58,16 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(debug=True, lifespan=lifespan)
 
-app.dependency_overrides[Stream] = lambda: stream
+
+@app.get("/new/{uid}", response_model=UserPyd)
+async def sse_listener(uid: int, user_stream: AsyncIterable = Depends(app_stream)) -> EventSourceResponse:
+    logger.info('reading events for the user create', user_id=uid, user_stream=user_stream)
+
+    return EventSourceResponse(user_stream)
 
 
-@app.get("/listen/{uid}", response_model=UserCreated)
-async def sse_listener(uid: int, stream: Stream = Depends()) -> EventSourceResponse:
-    # if uid == user.id from event:
-    return EventSourceResponse(stream)
+@app.get("/upd/{uid}", response_model=UserPyd)
+async def sse_listener(uid: int, user_stream: AsyncIterable = Depends(app_stream)) -> EventSourceResponse:
+    logger.info('reading events for the user update', user_id=uid, user_stream=user_stream)
+
+    return EventSourceResponse(user_stream)
